@@ -1,1 +1,2 @@
 psutil
+clickhouse-connect
