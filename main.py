@@ -3,6 +3,7 @@ import time
 from datetime import datetime
 from decimal import Decimal
 from typing import Iterable
+from utils import *
 
 import clickhouse_connect
 import psutil
@@ -104,41 +105,47 @@ def get_status():
     }
 
 
+def save_machine_name():
+    client.insert('machine', [(machine_name(), machine_uuid())], ('name', 'uuid'))
+
+
 def save(status: dict[str, dict | list]):
     cpu_rows = []
     for cpu in status['cpu']:
-        cpu_rows.append([status['time']] + list(cpu.values()))
-    client.insert('cpu', cpu_rows, ['time'] + list(status['cpu'][0].keys()))
+        cpu_rows.append([status['time'], machine_uuid()] + list(cpu.values()))
+    client.insert('cpu', cpu_rows, ['time', 'uuid'] + list(status['cpu'][0].keys()))
 
-    client.insert('memory', [[status['time']] + list(status['memory'].values())],
-                  ['time'] + list(status['memory'].keys()))
+    client.insert('memory', [[status['time'], machine_uuid()] + list(status['memory'].values())],
+                  ['time', 'uuid'] + list(status['memory'].keys()))
 
-    client.insert('swap', [[status['time']] + list(status['swap'].values())],
-                  ['time'] + list(status['swap'].keys()))
+    client.insert('swap', [[status['time'], machine_uuid()] + list(status['swap'].values())],
+                  ['time', 'uuid'] + list(status['swap'].keys()))
 
     disk_parts_rows = []
     for part in status['disk_parts']:
-        disk_parts_rows.append([status['time']] + list(part.values()))
-    client.insert('disk_parts', disk_parts_rows, ['time'] + list(status['disk_parts'][0].keys()))
+        disk_parts_rows.append([status['time'], machine_uuid()] + list(part.values()))
+    client.insert('disk_parts', disk_parts_rows, ['time', 'uuid'] + list(status['disk_parts'][0].keys()))
 
     disk_io_rows = []
     for disk in status['disk_io']:
-        disk_io_rows.append([status['time']] + list(disk.values()))
-    client.insert('disk_io', disk_io_rows, ['time'] + list(status['disk_io'][0].keys()))
+        disk_io_rows.append([status['time'], machine_uuid()] + list(disk.values()))
+    client.insert('disk_io', disk_io_rows, ['time', 'uuid'] + list(status['disk_io'][0].keys()))
 
     net_io_rows = []
     for net in status['net_io']:
-        net_io_rows.append([status['time']] + list(net.values()))
-    client.insert('net_io', net_io_rows, ['time'] + list(status['net_io'][0].keys()))
+        net_io_rows.append([status['time'], machine_uuid()] + list(net.values()))
+    client.insert('net_io', net_io_rows, ['time', 'uuid'] + list(status['net_io'][0].keys()))
 
 
 def main():
+    save_machine_name()
+
     for i in range(3):
         res = get_status()
         print(res)
 
         save(res)
-        time.sleep(1)
+        time.sleep(1.5)
 
 
 if __name__ == '__main__':
