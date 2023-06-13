@@ -3,25 +3,26 @@ import time
 from datetime import datetime
 from decimal import Decimal
 from typing import Iterable
-from utils import *
 
-import clickhouse_connect
 import psutil
+
+from utils import *
 
 
 def round_half_up(value: float, exp: str = '0.01'):
     return float(Decimal(value).quantize(Decimal(exp), rounding="ROUND_HALF_UP"))
 
 
-client = clickhouse_connect.get_client(host='localhost', username='default', database='monitor', password='world')
+# client = clickhouse_connect.get_client(host='localhost', username='default', database='monitor', password='world')
+client = None
 
 
 def is_physical_if(name: str) -> bool:
     if 'prog_s' not in is_physical_if.__dict__:
         prog_s = []
-        prefixes = ['en', 'wlan']
+        prefixes = ['en', 'wlan', 'WLAN', '以太网']
         for prefix in prefixes:
-            p = re.compile(rf'{prefix}\d+')
+            p = re.compile(rf'{prefix}\d*')
             prog_s.append(p)
         is_physical_if.__dict__['prog_s'] = prog_s
 
@@ -88,10 +89,10 @@ def get_status():
     } for k in s_net_io if is_physical_if(k)]
     # print(f'{net_io=}')
 
-    # net_conn = len(psutil.net_connections())
+    net_conn = len(psutil.net_connections())
     # print(f'{net_conn=}')
 
-    # print(psutil.sensors_temperatures()) //todo
+    # print(psutil.sensors_temperatures())
 
     # print()
     return {
@@ -101,7 +102,8 @@ def get_status():
         'swap': swap,
         'disk_parts': disk_parts,
         'disk_io': disk_io,
-        'net_io': net_io
+        'net_io': net_io,
+        'net_conn': net_conn
     }
 
 
@@ -138,13 +140,13 @@ def save(status: dict[str, dict | list]):
 
 
 def main():
-    save_machine_name()
+    # save_machine_name()
 
     for i in range(3):
         res = get_status()
         print(res)
 
-        save(res)
+        # save(res)
         time.sleep(1.5)
 
 
