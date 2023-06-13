@@ -4,6 +4,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Iterable
 
+import clickhouse_connect
 import psutil
 
 from utils import *
@@ -13,8 +14,7 @@ def round_half_up(value: float, exp: str = '0.01'):
     return float(Decimal(value).quantize(Decimal(exp), rounding="ROUND_HALF_UP"))
 
 
-# client = clickhouse_connect.get_client(host='localhost', username='default', database='monitor', password='world')
-client = None
+client = clickhouse_connect.get_client(host='localhost', username='default', database='monitor', password='world')
 
 
 def is_physical_if(name: str) -> bool:
@@ -33,10 +33,13 @@ def is_physical_if(name: str) -> bool:
     return False
 
 
-def get_status():
+def get_time():
     now_time = datetime.now()
     # print(f'time={now_time}')
+    return now_time
 
+
+def get_status():
     s_cpu = psutil.cpu_percent(interval=None, percpu=True)
     if not isinstance(s_cpu, Iterable):
         s_cpu = [s_cpu]
@@ -49,7 +52,8 @@ def get_status():
     s_vmem = psutil.virtual_memory()
     memory = {
         'total': round_half_up(s_vmem.total / 1024 ** 3),
-        'used': round_half_up((s_vmem.total - s_vmem.available) / 1024 ** 3)
+        'used': round_half_up((s_vmem.total - s_vmem.available) / 1024 ** 3),
+        'percent': s_vmem.percent
     }
     # print(f'{memory=}')
 
@@ -57,6 +61,7 @@ def get_status():
     swap = {
         'total': round_half_up(s_swap.total / 1024 ** 3),
         'used': round_half_up(s_swap.used / 1024 ** 3),
+        'percent': s_swap.percent
     }
     # print(f'{swap=}')
 
@@ -69,7 +74,8 @@ def get_status():
         usage = psutil.disk_usage(p['mountpoint'])
         p |= {
             'total': round_half_up(usage.total / 1024 ** 3),
-            'used': round_half_up(usage.used / 1024 ** 3)
+            'used': round_half_up(usage.used / 1024 ** 3),
+            'percent': usage.percent
         }
     # print(f'{disk_parts=}')
 
@@ -89,21 +95,28 @@ def get_status():
     } for k in s_net_io if is_physical_if(k)]
     # print(f'{net_io=}')
 
-    net_conn = len(psutil.net_connections())
+    if psutil.MACOS and not is_root():
+        net_conn = None
+    else:
+        net_conn = {'count': len(psutil.net_connections())}
+
     # print(f'{net_conn=}')
 
     # print(psutil.sensors_temperatures())
 
+    processes = {'count': len(psutil.pids())}
+    # print(f'{processes=}')
+
     # print()
     return {
-        'time': now_time,
         'cpu': cpu,
         'memory': memory,
         'swap': swap,
         'disk_parts': disk_parts,
         'disk_io': disk_io,
         'net_io': net_io,
-        'net_conn': net_conn
+        'net_conn': net_conn,
+        'processes': processes
     }
 
 
@@ -111,42 +124,32 @@ def save_machine_name():
     client.insert('machine', [(machine_name(), machine_uuid())], ('name', 'uuid'))
 
 
-def save(status: dict[str, dict | list]):
-    cpu_rows = []
-    for cpu in status['cpu']:
-        cpu_rows.append([status['time'], machine_uuid()] + list(cpu.values()))
-    client.insert('cpu', cpu_rows, ['time', 'uuid'] + list(status['cpu'][0].keys()))
+def save(now_time: datetime, m_uuid: uuid.UUID, status: dict[str, dict | list]):
+    for key, value in status.items():
+        rows = []
+        keys = []
+        if isinstance(value, list) and len(value) > 0:
+            keys = ['time', 'uuid'] + list(value[0].keys())
+            for row in value:
+                rows.append([now_time, m_uuid] + list(row.values()))
+        elif isinstance(value, dict):
+            keys = ['time', 'uuid'] + list(value.keys())
+            rows.append([now_time, machine_uuid()] + list(value.values()))
 
-    client.insert('memory', [[status['time'], machine_uuid()] + list(status['memory'].values())],
-                  ['time', 'uuid'] + list(status['memory'].keys()))
-
-    client.insert('swap', [[status['time'], machine_uuid()] + list(status['swap'].values())],
-                  ['time', 'uuid'] + list(status['swap'].keys()))
-
-    disk_parts_rows = []
-    for part in status['disk_parts']:
-        disk_parts_rows.append([status['time'], machine_uuid()] + list(part.values()))
-    client.insert('disk_parts', disk_parts_rows, ['time', 'uuid'] + list(status['disk_parts'][0].keys()))
-
-    disk_io_rows = []
-    for disk in status['disk_io']:
-        disk_io_rows.append([status['time'], machine_uuid()] + list(disk.values()))
-    client.insert('disk_io', disk_io_rows, ['time', 'uuid'] + list(status['disk_io'][0].keys()))
-
-    net_io_rows = []
-    for net in status['net_io']:
-        net_io_rows.append([status['time'], machine_uuid()] + list(net.values()))
-    client.insert('net_io', net_io_rows, ['time', 'uuid'] + list(status['net_io'][0].keys()))
+        if len(rows) > 0 and len(keys) > 0:
+            client.insert(key, rows, keys)
 
 
 def main():
-    # save_machine_name()
+    save_machine_name()
+    m_uuid = machine_uuid()
 
     for i in range(3):
+        now_time = get_time()
         res = get_status()
         print(res)
 
-        # save(res)
+        save(now_time, m_uuid, res)
         time.sleep(1.5)
 
 

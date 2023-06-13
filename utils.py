@@ -1,7 +1,6 @@
+import os
 import platform
 import uuid
-
-import psutil
 
 
 def bytes2human(n):
@@ -27,7 +26,11 @@ def machine_name() -> str:
     return machine_name.__dict__['s_machine_name']
 
 
-def machine_uuid() -> str:
+def machine_uuid() -> uuid.UUID:
     if 's_machine_uuid' not in machine_uuid.__dict__:
-        machine_uuid.__dict__['s_machine_uuid'] = str(uuid.UUID(int=uuid.getnode()))
+        machine_uuid.__dict__['s_machine_uuid'] = uuid.UUID(int=uuid.getnode())
     return machine_uuid.__dict__['s_machine_uuid']
+
+
+def is_root():
+    return os.geteuid() == 0
