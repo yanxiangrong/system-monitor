@@ -124,7 +124,7 @@ class App:
         self.save_machine_name()
         m_uuid = machine_uuid()
 
-        for i in range(3):
+        while True:
             now_time = get_time()
             res = get_status()
             # print(res)
@@ -140,6 +140,7 @@ def main():
             App().run()
         except Exception as exp:
             print(exp)
+        time.sleep(10)
 
 
 if __name__ == '__main__':
