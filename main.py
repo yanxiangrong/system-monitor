@@ -10,29 +10,6 @@ import psutil
 from utils import *
 
 
-def round_half_up(value: float, exp: str = '0.01'):
-    return float(Decimal(value).quantize(Decimal(exp), rounding="ROUND_HALF_UP"))
-
-
-client = clickhouse_connect.get_client(host='localhost', username='default', database='monitor', password='world')
-
-
-def is_physical_if(name: str) -> bool:
-    if 'prog_s' not in is_physical_if.__dict__:
-        prog_s = []
-        prefixes = ['en', 'wlan', 'WLAN', '以太网']
-        for prefix in prefixes:
-            p = re.compile(rf'{prefix}\d*')
-            prog_s.append(p)
-        is_physical_if.__dict__['prog_s'] = prog_s
-
-    for prog in is_physical_if.__dict__['prog_s']:
-        if prog.match(name) is not None:
-            return True
-
-    return False
-
-
 def get_time():
     now_time = datetime.now()
     # print(f'time={now_time}')
@@ -120,37 +97,49 @@ def get_status():
     }
 
 
-def save_machine_name():
-    client.insert('machine', [(machine_name(), machine_uuid())], ('name', 'uuid'))
+class App:
+    def __init__(self):
+        self.client = clickhouse_connect.get_client(host='8.134.13.200', username='default', database='monitor',
+                                                    password='world')
 
+    def save_machine_name(self):
+        self.client.insert('machine', [(machine_name(), machine_uuid())], ('name', 'uuid'))
 
-def save(now_time: datetime, m_uuid: uuid.UUID, status: dict[str, dict | list]):
-    for key, value in status.items():
-        rows = []
-        keys = []
-        if isinstance(value, list) and len(value) > 0:
-            keys = ['time', 'uuid'] + list(value[0].keys())
-            for row in value:
-                rows.append([now_time, m_uuid] + list(row.values()))
-        elif isinstance(value, dict):
-            keys = ['time', 'uuid'] + list(value.keys())
-            rows.append([now_time, machine_uuid()] + list(value.values()))
+    def save(self, now_time: datetime, m_uuid: uuid.UUID, status: dict[str, dict | list]):
+        for key, value in status.items():
+            rows = []
+            keys = []
+            if isinstance(value, list) and len(value) > 0:
+                keys = ['time', 'uuid'] + list(value[0].keys())
+                for row in value:
+                    rows.append([now_time, m_uuid] + list(row.values()))
+            elif isinstance(value, dict):
+                keys = ['time', 'uuid'] + list(value.keys())
+                rows.append([now_time, machine_uuid()] + list(value.values()))
 
-        if len(rows) > 0 and len(keys) > 0:
-            client.insert(key, rows, keys)
+            if len(rows) > 0 and len(keys) > 0:
+                self.client.insert(key, rows, keys)
+
+    def run(self):
+        self.save_machine_name()
+        m_uuid = machine_uuid()
+
+        for i in range(3):
+            now_time = get_time()
+            res = get_status()
+            # print(res)
+            print(now_time)
+
+            self.save(now_time, m_uuid, res)
+            time.sleep(1.5)
 
 
 def main():
-    save_machine_name()
-    m_uuid = machine_uuid()
-
-    for i in range(3):
-        now_time = get_time()
-        res = get_status()
-        print(res)
-
-        save(now_time, m_uuid, res)
-        time.sleep(1.5)
+    while True:
+        try:
+            App().run()
+        except Exception as exp:
+            print(exp)
 
 
 if __name__ == '__main__':

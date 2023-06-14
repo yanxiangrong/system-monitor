@@ -1,6 +1,8 @@
 import os
 import platform
+import re
 import uuid
+from decimal import Decimal
 
 
 def bytes2human(n):
@@ -34,3 +36,23 @@ def machine_uuid() -> uuid.UUID:
 
 def is_root():
     return os.geteuid() == 0
+
+
+def is_physical_if(name: str) -> bool:
+    if 'prog_s' not in is_physical_if.__dict__:
+        prog_s = []
+        prefixes = ['en', 'wlan', 'WLAN', '以太网']
+        for prefix in prefixes:
+            p = re.compile(rf'{prefix}\d*')
+            prog_s.append(p)
+        is_physical_if.__dict__['prog_s'] = prog_s
+
+    for prog in is_physical_if.__dict__['prog_s']:
+        if prog.match(name) is not None:
+            return True
+
+    return False
+
+
+def round_half_up(value: float, exp: str = '0.01'):
+    return float(Decimal(value).quantize(Decimal(exp), rounding="ROUND_HALF_UP"))

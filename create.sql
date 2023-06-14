@@ -6,7 +6,7 @@ create table machine
 (
     name String,
     uuid UUID
-) engine MergeTree primary key uuid;
+) engine ReplacingMergeTree() order by uuid;
 
 create table cpu
 (
@@ -14,7 +14,7 @@ create table cpu
     uuid    UUID,
     core    int,
     percent float
-) engine MergeTree order by time;
+) engine MergeTree() order by time;
 
 create table memory
 (
@@ -23,7 +23,7 @@ create table memory
     total   float,
     used    float,
     percent float
-) engine MergeTree order by time;
+) engine MergeTree() order by time;
 
 create table swap
 (
@@ -32,7 +32,7 @@ create table swap
     total   float,
     used    float,
     percent float
-) engine MergeTree order by time;
+) engine MergeTree() order by time;
 
 create table disk_parts
 (
@@ -43,7 +43,7 @@ create table disk_parts
     total      float,
     used       float,
     percent    float
-) engine MergeTree order by time;
+) engine MergeTree() order by time;
 
 create table disk_io
 (
@@ -52,7 +52,7 @@ create table disk_io
     device String,
     read   float,
     write  float
-) engine MergeTree order by time;
+) engine MergeTree() order by time;
 
 create table net_io
 (
@@ -61,14 +61,14 @@ create table net_io
     device String,
     send   float,
     recv   float
-) engine MergeTree order by time;
+) engine MergeTree() order by time;
 
 create table net_conn
 (
     time        datetime('Asia/Shanghai'),
     uuid        UUID,
     count int
-) engine MergeTree order by time;
+) engine MergeTree() order by time;
 
 create table temperatures
 (
@@ -76,11 +76,11 @@ create table temperatures
     uuid  UUID,
     label String,
     temp  float
-) engine MergeTree order by time;
+) engine MergeTree() order by time;
 
 create table processes
 (
     time        datetime('Asia/Shanghai'),
     uuid        UUID,
     count int
-) engine MergeTree order by time;
+) engine MergeTree() order by time;
