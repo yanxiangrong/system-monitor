@@ -1,7 +1,5 @@
-import re
 import time
 from datetime import datetime
-from decimal import Decimal
 from typing import Iterable
 
 import clickhouse_connect
