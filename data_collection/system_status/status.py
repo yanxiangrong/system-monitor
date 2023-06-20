@@ -4,7 +4,7 @@ from typing import Iterable
 
 import psutil
 
-from utils import *
+from ..utils import *
 
 last_s_disk_io = None
 last_s_net_io = None
