@@ -1,4 +1,3 @@
-import time
 from datetime import timedelta
 from statistics import mean
 from typing import Callable
@@ -65,7 +64,7 @@ def echo(ws: Server):
     for item in historical:
         del item['_id']
 
-    span = int(timedelta(minutes=1).total_seconds())
+    span = int(timedelta(minutes=5).total_seconds())
 
     values = sample(historical, span, cpu_avg)
     data = to_json(values)

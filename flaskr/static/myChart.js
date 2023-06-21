@@ -1,9 +1,29 @@
 // 基于准备好的dom，初始化echarts实例
-const myChart = echarts.init(document.getElementById('main'));
+const cpuChart = echarts.init(document.getElementById('chart-cpu'));
 
 
+const xAxisOpt = {
+    type: 'time',
+    minInterval: 60 * 1000,
+    splitLine: {
+        show: true
+    }
+}
+
+const seriesOpt = {
+    type: 'line',
+    symbol: 'none',
+    connectNulls: true,
+    areaStyle: {
+        opacity: 0.2,
+    },
+    lineStyle: {
+        width: 1,
+        opacity: 0.8,
+    },
+}
 // 指定图表的配置项和数据
-const option = {
+const cpuChartOpt = {
     title: {
         text: 'CPU'
     },
@@ -12,13 +32,7 @@ const option = {
         appendToBody: true,
         valueFormatter: (value) => value + ' %'
     },
-    xAxis: {
-        type: 'time',
-        minInterval: 60 * 1000,
-        splitLine: {
-            show: true
-        }
-    },
+    xAxis: xAxisOpt,
     yAxis: {
         axisLabel: {
             formatter: '{value} %'
@@ -27,7 +41,7 @@ const option = {
 };
 
 // 使用刚指定的配置项和数据显示图表。
-myChart.setOption(option);
+cpuChart.setOption(cpuChartOpt);
 
 let dataSet = {};
 
@@ -53,7 +67,7 @@ function connect() {
                     continue
                 }
                 dataSet[core].push({name: i['time'], value: [Date.parse(i['time']), i['cpu'][core]['percent']]})
-                if (dataSet[core].length > 288) {
+                if (dataSet[core][0].value[dataSet[core][0].value.length - 1] - dataSet[core][0].value[0] >= 86400000) {
                     dataSet[core].shift()
                 }
             }
@@ -63,22 +77,13 @@ function connect() {
 
         for (const core in dataSet) {
             series.push({
+                ...seriesOpt,
                 name: core,
-                type: 'line',
-                symbol: 'none',
-                connectNulls: true,
-                areaStyle: {
-                    opacity: 0.2,
-                },
-                lineStyle: {
-                    width: 1,
-                    opacity: 0.8,
-                },
                 data: dataSet[core]
             })
         }
 
-        myChart.setOption({
+        cpuChart.setOption({
             series: series
         })
     }

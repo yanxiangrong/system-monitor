@@ -18,6 +18,7 @@ class Monitor:
             data = {
                 'time': system_status.now_time(),
                 'cpu': system_status.cpu(),
+                'memory': system_status.memory(),
             }
             self.mongo_coll.insert_one(data)
             try:
