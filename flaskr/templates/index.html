@@ -6,10 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}" type="text/css">
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.2/dist/echarts.min.js"></script>
-
 </head>
 <body>
-<div id="chart-cpu" class="chart-size"></div>
+<div id="chart-cpu" class="chart"></div>
+<div id="chart-memory" class="chart"></div>
+<div id="chart-disk-io" class="chart"></div>
+<div id="chart-net-io" class="chart"></div>
+<div id="chart-disk-parts" class="chart-width"></div>
 <script src=" {{ url_for('static', filename='myChart.js') }}" type="text/javascript"></script>
 </body>
 </html>

@@ -77,11 +77,13 @@ def net_io():
     global last_s_net_io
     if last_s_net_io is None:
         last_s_net_io = s_net_io
-    return [{
+    net_info = [{
         'device': k,
         'send': round_half_up((s_net_io[k].bytes_sent - last_s_net_io[k].bytes_sent) / 1024 ** 2),
         'recv': round_half_up((s_net_io[k].bytes_recv - last_s_net_io[k].bytes_recv) / 1024 ** 2),
     } for k in s_net_io if is_physical_if(k)]
+    last_s_net_io = s_net_io
+    return net_info
 
 
 def init():
