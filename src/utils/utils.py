@@ -1,7 +1,9 @@
+import json
 import os
 import platform
 import re
 import uuid
+from datetime import datetime
 from decimal import Decimal
 
 
@@ -56,3 +58,15 @@ def is_physical_if(name: str) -> bool:
 
 def round_half_up(value: float, exp: str = '0.01'):
     return float(Decimal(value).quantize(Decimal(exp), rounding="ROUND_HALF_UP"))
+
+
+class ComplexEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, datetime):
+            return str(obj)
+        # Let the base class default method raise the TypeError
+        return json.JSONEncoder.default(self, obj)
+
+
+def to_json(obj) -> str:
+    return json.dumps(obj, cls=ComplexEncoder)

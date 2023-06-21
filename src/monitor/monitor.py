@@ -5,7 +5,7 @@ from threading import Thread
 
 from pymongo.collection import Collection
 
-from data_collection import system_status
+from src import system_status
 
 
 class Monitor:

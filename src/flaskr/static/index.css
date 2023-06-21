@@ -1,13 +1,17 @@
 .chart {
-    display: inline-block;
     width: 580px;
     height: 340px;
 }
 
+.charts {
+    display: flex;
+    flex-wrap:wrap;
+}
+
 .chart-width {
     padding-top: 1px;
-    display: inline-block;
     width: 580px;
+    height: auto;
 }
 
 .progress-bar-bg {
