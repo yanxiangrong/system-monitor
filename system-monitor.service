@@ -1,0 +1,13 @@
+[Unit]
+Description=Certbot--SSL certificate
+Wants=network.target network-online.target
+After=network.target network-online.target
+
+[Service]
+Type=idle
+Restart=on-failure
+WorkingDirectory=/usr/local/lib/system-monitor
+ExecStart=/usr/local/lib/system-monitor/venv/bin/python /usr/local/lib/system-monitor/main.py
+
+[Install]
+WantedBy=multi-user.target

@@ -105,6 +105,7 @@ const cpuChartOpt = {
     },
     xAxis: xAxisOpt,
     yAxis: {
+        max: 100,
         name: '%',
     }
 };
@@ -136,11 +137,20 @@ const diskIOChartOpt = {
     xAxis: xAxisOpt,
     yAxis: {
         name: 'MB/s',
+        max: function (value) {
+            return Math.max(value.max, 50);
+        }
     }
 };
 
 const netIOChartOpt = {
     ...diskIOChartOpt,
+    yAxis: {
+        name: 'MB/s',
+        max: function (value) {
+            return Math.max(value.max, 5);
+        }
+    },
     title: {
         text: '网络流量'
     }
@@ -312,11 +322,13 @@ function update(data) {
 
 function connect() {
     let urlStuff = 'ws'
-    if (location.protocol === 'https') {
+    if (location.protocol === 'https:') {
         urlStuff = 'wss'
     }
 
-    const socket = new WebSocket(urlStuff + '://' + location.host + '/data');
+    let url = urlStuff + '://' + location.host + location.pathname + 'data'
+    console.log('connect to', url)
+    const socket = new WebSocket(url);
     socket.onmessage = function (event) {
         let data = JSON.parse(event.data)
         console.log(data)

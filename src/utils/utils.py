@@ -43,7 +43,7 @@ def is_root():
 def is_physical_if(name: str) -> bool:
     if 'prog_s' not in is_physical_if.__dict__:
         prog_s = []
-        prefixes = ['en', 'wlan', 'WLAN', '以太网']
+        prefixes = ['en', 'eth', 'wlan', 'WLAN', '以太网']
         for prefix in prefixes:
             p = re.compile(rf'{prefix}\d*')
             prog_s.append(p)

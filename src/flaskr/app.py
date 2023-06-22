@@ -9,20 +9,22 @@ from src.monitor.monitor import Monitor
 from src.sample.sample import all_sample, sample
 from src.utils import *
 
-app = Flask(__name__)
+route_prefix = '/ctyxdn'
+
+app = Flask(__name__, static_url_path=f'{route_prefix}/static')
 sock = Sock(app)
 db = get_database()
-monitor = Monitor(db['status'])
+monitor = Monitor(db['systemMonitor'])
 
 
-@app.route("/")
+@app.route(f"{route_prefix}/")
 def index():
     return render_template("index.html")
 
 
-@sock.route('/data')
+@sock.route(f'{route_prefix}/data')
 def echo(ws: Server):
-    historical = db['status'].find({'time': {'$gte': datetime.now() - timedelta(days=1)}})
+    historical = db['systemMonitor'].find({'time': {'$gte': datetime.now() - timedelta(days=1)}})
     historical = list(historical)
     for item in historical:
         del item['_id']
@@ -69,13 +71,15 @@ def echo(ws: Server):
         except ConnectionClosed:
             break
 
+
 def init():
     system_status.init()
+
 
 def main():
     init()
     monitor.start()
-    app.run('0.0.0.0', 8081)
+    app.run(port=8081)
 
 
 if __name__ == '__main__':
