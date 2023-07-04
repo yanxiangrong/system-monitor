@@ -138,7 +138,7 @@ const diskIOChartOpt = {
     yAxis: {
         name: 'MB/s',
         max: function (value) {
-            return Math.max(value.max, 50);
+            return Math.max(value.max, 5);
         }
     }
 };
@@ -148,7 +148,7 @@ const netIOChartOpt = {
     yAxis: {
         name: 'MB/s',
         max: function (value) {
-            return Math.max(value.max, 5);
+            return Math.max(value.max, 1);
         }
     },
     title: {
